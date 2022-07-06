@@ -33,14 +33,23 @@ const reducer = (currentState, action) => {
     case "ADD_ITEM":
       const { name, title } = action.payload
       const { todoList } = currentState
+      const userIdSet = new Set()
+
+      const existingUser = todoList.find(
+        (todo) => todo.name.toLowerCase() === name.toLowerCase()
+      )
+
+      if (!existingUser) todoList.forEach((todo) => userIdSet.add(todo.userId))
 
       newState = {
         ...currentState,
         todoList: todoList.concat([
           {
             id: todoList.length >= 1 ? todoList[todoList.length - 1].id + 1 : 1,
-            userId: 1000,
-            name: name,
+            userId: existingUser
+              ? existingUser.userId
+              : Math.max(...userIdSet) + 1,
+            name: existingUser ? existingUser.name : name,
             title: title,
             completed: false,
           },

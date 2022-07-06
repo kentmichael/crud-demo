@@ -15,6 +15,22 @@ const searchList = (list, keyword) =>
     item.title.toLowerCase().includes(keyword.toLowerCase())
   )
 
+const fetchDataAndCheckStorage = (dispatch) => {
+  const storage = localStorage.getItem("CRUD_demo")
+
+  if (!storage)
+    fetchData()
+      .then((res) => {
+        if (res instanceof Error) throw new Error(res.message)
+        dispatch({ type: "FETCH_SUCCESS", payload: res })
+      })
+      .catch((err) => dispatch({ type: "FETCH_ERROR", payload: err.message }))
+  else {
+    const state = JSON.parse(storage)
+    dispatch({ type: "FETCH_SUCCESS", payload: state.todoList })
+  }
+}
+
 const TodoList = () => {
   const {
     state: { isLoading, todoList, errorMessage },
@@ -39,21 +55,7 @@ const TodoList = () => {
   }
 
   useEffect(() => {
-    const storage = localStorage.getItem("CRUD_demo")
-
-    console.log(storage)
-
-    if (!storage)
-      fetchData()
-        .then((res) => {
-          if (res instanceof Error) throw new Error(res.message)
-          dispatch({ type: "FETCH_SUCCESS", payload: res })
-        })
-        .catch((err) => dispatch({ type: "FETCH_ERROR", payload: err.message }))
-    else {
-      const state = JSON.parse(storage)
-      dispatch({ type: "FETCH_SUCCESS", payload: state.todoList })
-    }
+    fetchDataAndCheckStorage(dispatch)
   }, [])
 
   return (
@@ -63,7 +65,7 @@ const TodoList = () => {
           <tr>
             <th>#</th>
             <th>User</th>
-            <th>Item</th>
+            <th>Todo</th>
             <th>Actions</th>
           </tr>
         </thead>

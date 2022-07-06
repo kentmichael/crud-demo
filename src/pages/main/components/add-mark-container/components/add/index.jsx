@@ -6,11 +6,7 @@ const Add = () => {
     dialog.showModal()
   }
 
-  return (
-    <>
-      <button onClick={addItem}>+</button>
-    </>
-  )
+  return <button onClick={addItem}>+</button>
 }
 
 export default Add

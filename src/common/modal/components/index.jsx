@@ -65,7 +65,6 @@ const DialogModal = () => {
       if (e.key === "Escape") {
         setInput(initialState)
         setItemIdToUpdate("")
-        console.log("asdasdqwe")
       }
     })
   }, [])
@@ -73,9 +72,10 @@ const DialogModal = () => {
   return ReactDOM.createPortal(
     <dialog id="dialogModal">
       <form onSubmit={handleSubmit}>
-        <label>Name:</label>
+        <label htmlFor="name">Name:</label>
         <input
           type="text"
+          id="name"
           name="name"
           value={input.name}
           onChange={handleChange}
@@ -83,9 +83,10 @@ const DialogModal = () => {
         />
         <br />
 
-        <label>Item:</label>
+        <label htmlFor="item">Item:</label>
         <input
           type="text"
+          id="item"
           name="item"
           value={input.item}
           onChange={handleChange}
