@@ -1,4 +1,6 @@
 import React, { useContext, useMemo } from "react"
+import Box from "@mui/material/Box"
+import Button from "@mui/material/Button"
 import { AppContext } from "@/setup/app-context-manager/appContext"
 
 const Mark = () => {
@@ -21,12 +23,16 @@ const Mark = () => {
   }
 
   return (
-    <>
-      <button onClick={completeAllItem}>Mark all as complete</button>
+    <Box>
+      <Button onClick={completeAllItem} color="warning" variant="outlined">
+        Mark all as complete
+      </Button>
       {checkCompletedItem ? (
-        <button onClick={deleteCompletedItem}>Delete completed items</button>
+        <Button onClick={deleteCompletedItem} color="error" variant="outlined">
+          Delete completed items
+        </Button>
       ) : null}
-    </>
+    </Box>
   )
 }
 

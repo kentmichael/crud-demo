@@ -1,4 +1,17 @@
-import React, { useEffect, useContext } from "react"
+import React, { useEffect, useContext, useState } from "react"
+import Paper from "@mui/material/Paper"
+import TableContainer from "@mui/material/TableContainer"
+import Table from "@mui/material/Table"
+import TableHead from "@mui/material/TableHead"
+import TableRow from "@mui/material/TableRow"
+import TableCell from "@mui/material/TableCell"
+import TableBody from "@mui/material/TableBody"
+import Typography from "@mui/material/Typography"
+import TablePagination from "@mui/material/TablePagination"
+import IconButton from "@mui/material/IconButton"
+import EditIcon from "@mui/icons-material/Edit"
+import CheckCircleIcon from "@mui/icons-material/CheckCircle"
+import RemoveCircleOutlinedIcon from "@mui/icons-material/RemoveCircleOutlined"
 import { fetchData } from "@/setup/api-manager/fetchData"
 import { AppContext } from "@/setup/app-context-manager/appContext"
 
@@ -31,6 +44,29 @@ const fetchDataAndCheckStorage = (dispatch) => {
   }
 }
 
+const columns = [
+  {
+    id: "number",
+    label: "No.",
+    width: "5%",
+  },
+  {
+    id: "user",
+    label: "User",
+    width: "20%",
+  },
+  {
+    id: "todo",
+    label: "Todo",
+    width: "60%",
+  },
+  {
+    id: "actions",
+    label: "Actions",
+    width: "15%",
+  },
+]
+
 const TodoList = () => {
   const {
     state: { isLoading, todoList, errorMessage },
@@ -38,6 +74,8 @@ const TodoList = () => {
     stateFilter: { searchKeyword, filterOption },
     setItemIdToUpdate,
   } = useContext(AppContext)
+  const [page, setPage] = useState(0)
+  const [rowsPerPage, setRowsPerPage] = useState(10)
 
   let list = filterList(todoList, filterOption)
 
@@ -54,58 +92,108 @@ const TodoList = () => {
     dispatch({ type: "COMPLETE_ITEM", payload: id })
   }
 
+  const handleChangePage = (e, newPage) => {
+    setPage(newPage)
+  }
+
+  const handleChangeRowsPerPage = (e) => {
+    setRowsPerPage(+e.target.value)
+    setPage(0)
+  }
+
   useEffect(() => {
     fetchDataAndCheckStorage(dispatch)
   }, [])
 
   return (
-    <>
-      <table>
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>User</th>
-            <th>Todo</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {isLoading
-            ? null
-            : errorMessage
-            ? null
-            : list.length
-            ? list.map((todo, idx) => {
-                const { id, name, title, completed } = todo
+    <Paper sx={{ width: "100%", overflow: "hidden", marginBottom: "25px" }}>
+      <TableContainer sx={{ height: 410 }}>
+        <Table stickyHeader aria-label="sticky table">
+          <TableHead>
+            <TableRow
+              sx={{
+                "& .MuiTableCell-root": {
+                  backgroundColor: "#dbdbdb",
+                },
+              }}
+            >
+              {columns.map((column) => (
+                <TableCell key={column.id} style={{ minWidth: column.width }}>
+                  {column.label}
+                </TableCell>
+              ))}
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {isLoading
+              ? null
+              : errorMessage
+              ? null
+              : list.length
+              ? list
+                  .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                  .map((todo, idx) => {
+                    const { id, name, title, completed } = todo
 
-                return (
-                  <tr key={id}>
-                    <td>{idx + 1}</td>
-                    <td>{name}</td>
-                    <td>{completed ? <strike>{title}</strike> : title}</td>
-                    <td>
-                      <button
-                        onClick={() => updateItem(id)}
-                        disabled={completed ? true : false}
-                      >
-                        Edit
-                      </button>
-                      <button onClick={() => completeItem(id)}>Complete</button>
-                    </td>
-                  </tr>
-                )
-              })
-            : null}
-        </tbody>
-      </table>
-      {isLoading ? (
-        <h3>Loading data..</h3>
-      ) : list.length ? null : errorMessage ? (
-        <h3>{errorMessage}</h3>
-      ) : (
-        <h3>No Results.</h3>
-      )}
-    </>
+                    return (
+                      <TableRow key={id}>
+                        <TableCell>{page * rowsPerPage + idx + 1}</TableCell>
+                        <TableCell>{name}</TableCell>
+                        <TableCell>
+                          {completed ? <strike>{title}</strike> : title}
+                        </TableCell>
+                        <TableCell>
+                          <IconButton
+                            onClick={() => updateItem(id)}
+                            disabled={completed ? true : false}
+                            aria-label="Edit"
+                            color="info"
+                            title="Edit"
+                          >
+                            <EditIcon />
+                          </IconButton>
+                          <IconButton
+                            onClick={() => completeItem(id)}
+                            aria-label="Complete"
+                            color={completed ? "success" : "error"}
+                            title="Toggle Complete"
+                          >
+                            {completed ? (
+                              <CheckCircleIcon />
+                            ) : (
+                              <RemoveCircleOutlinedIcon />
+                            )}
+                          </IconButton>
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })
+              : null}
+          </TableBody>
+        </Table>
+        {isLoading ? (
+          <h3>Loading data..</h3>
+        ) : list.length ? null : errorMessage ? (
+          <h3>{errorMessage}</h3>
+        ) : (
+          <Typography
+            variant="h6"
+            sx={{ marginTop: "20px", textAlign: "center" }}
+          >
+            No Results.
+          </Typography>
+        )}
+      </TableContainer>
+      <TablePagination
+        rowsPerPageOptions={[10, 25, 100]}
+        component="div"
+        count={list.length}
+        rowsPerPage={rowsPerPage}
+        page={page}
+        onPageChange={handleChangePage}
+        onRowsPerPageChange={handleChangeRowsPerPage}
+      />
+    </Paper>
   )
 }
 

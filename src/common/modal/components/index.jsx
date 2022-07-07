@@ -1,6 +1,18 @@
 import React, { useState, useContext, useEffect } from "react"
 import ReactDOM from "react-dom"
+import Box from "@mui/material/Box"
+import FormControl from "@mui/material/FormControl"
+import TextField from "@mui/material/TextField"
+import Typography from "@mui/material/Typography"
+import Button from "@mui/material/Button"
+import Stack from "@mui/material/Stack"
 import { AppContext } from "@/setup/app-context-manager/appContext"
+
+const modalStyle = {
+  padding: 0,
+  borderColor: "#fff",
+  borderRadius: "5px",
+}
 
 const initialState = {
   name: "",
@@ -9,7 +21,9 @@ const initialState = {
 
 const DialogModal = () => {
   const [input, setInput] = useState(initialState)
+  const [confirm, setConfirm] = useState(false)
   const dialog = document.getElementById("dialogModal")
+
   const {
     state: { todoList },
     dispatch,
@@ -33,6 +47,7 @@ const DialogModal = () => {
       dialog.close()
     }
 
+    setConfirm(true)
     e.preventDefault()
   }
 
@@ -46,6 +61,7 @@ const DialogModal = () => {
   const closeModal = () => {
     setInput(initialState)
     setItemIdToUpdate("")
+    setConfirm(false)
     dialog.close()
   }
 
@@ -70,33 +86,73 @@ const DialogModal = () => {
   }, [])
 
   return ReactDOM.createPortal(
-    <dialog id="dialogModal">
-      <form onSubmit={handleSubmit}>
-        <label htmlFor="name">Name:</label>
-        <input
-          type="text"
-          id="name"
-          name="name"
-          value={input.name}
-          onChange={handleChange}
-          disabled={itemIdToUpdate ? true : false}
-        />
-        <br />
+    <dialog
+      id="dialogModal"
+      onClick={(e) => {
+        if (e.target.id === "dialogModal") {
+          setInput(initialState)
+          setItemIdToUpdate("")
+          setConfirm(false)
+          dialog.close()
+        }
+      }}
+      style={modalStyle}
+    >
+      <Box
+        sx={{
+          width: 360,
+          height: 410,
+          paddingBlock: "20px",
+          paddingInline: "10px",
+        }}
+      >
+        <FormControl
+          onSubmit={handleSubmit}
+          sx={{
+            width: "100%",
+            height: "100%",
+            display: "flex",
+            flexFlow: "column wrap",
+            gap: "15px",
+          }}
+        >
+          <Typography variant="h1" sx={{ fontSize: "28px" }}>
+            {input.name ? "EDIT" : "ADD"}
+          </Typography>
 
-        <label htmlFor="item">Item:</label>
-        <input
-          type="text"
-          id="item"
-          name="item"
-          value={input.item}
-          onChange={handleChange}
-        />
+          <TextField
+            variant="outlined"
+            type="text"
+            label="Name"
+            name="name"
+            value={input.name}
+            onChange={handleChange}
+            disabled={itemIdToUpdate ? true : false}
+            required
+          />
 
-        <div>
-          <button type="submit">Confirm</button>
-          <button onClick={closeModal}>Cancel</button>
-        </div>
-      </form>
+          <TextField
+            id="outlined-multiline-static"
+            label="Item"
+            type="text"
+            name="item"
+            value={input.item}
+            onChange={handleChange}
+            multiline
+            rows={5}
+            required
+          />
+
+          <Stack spacing={2} direction="row" justifyContent="flex-end">
+            <Button type="submit" variant="contained">
+              Confirm
+            </Button>
+            <Button onClick={closeModal} variant="contained" color="error">
+              Cancel
+            </Button>
+          </Stack>
+        </FormControl>
+      </Box>
     </dialog>,
     document.getElementById("root-modal")
   )
