@@ -1,16 +1,20 @@
-import React, { useContext, useMemo } from "react"
+import React, { useMemo } from "react"
 import Box from "@mui/material/Box"
 import Button from "@mui/material/Button"
-import { AppContext } from "@/setup/app-context-manager/appContext"
+import { useDispatch, useSelector } from "react-redux"
+import {
+  markAllItemAsComplete,
+  deleteCompletedItem,
+} from "@/setup/features/table-data/tableDataSlice"
 
 const Mark = () => {
   const {
-    state: { todoList },
-    dispatch,
-  } = useContext(AppContext)
+    tableData: { data: todoList },
+  } = useSelector((state) => state)
+  const dispatch = useDispatch()
 
   const completeAllItem = () => {
-    dispatch({ type: "COMPLETE_ALL_ITEM" })
+    dispatch(markAllItemAsComplete())
   }
 
   const checkCompletedItem = useMemo(() => {
@@ -18,8 +22,8 @@ const Mark = () => {
       return todoList.some((item) => item.completed === true)
   }, [todoList])
 
-  const deleteCompletedItem = () => {
-    dispatch({ type: "DELETE_COMPLETED" })
+  const deleteAllCompletedItem = () => {
+    dispatch(deleteCompletedItem())
   }
 
   return (
@@ -28,7 +32,11 @@ const Mark = () => {
         Mark all as complete
       </Button>
       {checkCompletedItem ? (
-        <Button onClick={deleteCompletedItem} color="error" variant="outlined">
+        <Button
+          onClick={deleteAllCompletedItem}
+          color="error"
+          variant="outlined"
+        >
           Delete completed items
         </Button>
       ) : null}

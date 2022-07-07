@@ -1,21 +1,22 @@
-import React, { useContext, useState, useTransition } from "react"
+import React, { useState, useTransition } from "react"
 import TextField from "@mui/material/TextField"
 import SearchIcon from "@mui/icons-material/Search"
-import { AppContext } from "@/setup/app-context-manager/appContext"
 import { InputAdornment } from "@mui/material"
 import { useTheme } from "@mui/material"
+import { useDispatch } from "react-redux"
+import { setSearchKeyword } from "@/setup/features/filter-and-search/filterAndSearchSlice"
 
 const Search = () => {
   const [isPending, startTransition] = useTransition()
   const [input, setInput] = useState("")
-  const { dispatchFilter } = useContext(AppContext)
   const theme = useTheme()
+  const dispatch = useDispatch()
 
   const handleInputChange = (e) => {
     setInput(e.target.value)
 
     startTransition(() => {
-      dispatchFilter({ type: "SEARCH_KEYWORD", payload: e.target.value })
+      dispatch(setSearchKeyword(e.target.value))
     })
   }
 

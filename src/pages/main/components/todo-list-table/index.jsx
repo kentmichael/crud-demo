@@ -1,4 +1,11 @@
-import React, { useEffect, useContext, useState } from "react"
+import React, { useEffect, useState } from "react"
+import { useSelector, useDispatch } from "react-redux"
+import {
+  setData,
+  setErrorMessage,
+  markItemAsComplete,
+} from "@/setup/features/table-data/tableDataSlice"
+import { setIdToUpdate } from "@/setup/features/update/updateSlice"
 import Paper from "@mui/material/Paper"
 import TableContainer from "@mui/material/TableContainer"
 import Table from "@mui/material/Table"
@@ -12,8 +19,6 @@ import IconButton from "@mui/material/IconButton"
 import EditIcon from "@mui/icons-material/Edit"
 import CheckCircleIcon from "@mui/icons-material/CheckCircle"
 import RemoveCircleOutlinedIcon from "@mui/icons-material/RemoveCircleOutlined"
-import { fetchData } from "@/setup/api-manager/fetchData"
-import { AppContext } from "@/setup/app-context-manager/appContext"
 
 const filterList = (todoList, option) => {
   return option === "Active"
@@ -28,19 +33,25 @@ const searchList = (list, keyword) =>
     item.title.toLowerCase().includes(keyword.toLowerCase())
   )
 
-const fetchDataAndCheckStorage = (dispatch) => {
-  const storage = localStorage.getItem("CRUD_demo")
+const setTableData = (state, dispatch) => {
+  const { userData, todoData } = state
+  const { todos, errorMessage: errorInTodosFetch } = todoData
+  const { users, errorMessage: errorInUsersFetch } = userData
 
-  if (!storage)
-    fetchData()
-      .then((res) => {
-        if (res instanceof Error) throw new Error(res.message)
-        dispatch({ type: "FETCH_SUCCESS", payload: res })
-      })
-      .catch((err) => dispatch({ type: "FETCH_ERROR", payload: err.message }))
-  else {
-    const state = JSON.parse(storage)
-    dispatch({ type: "FETCH_SUCCESS", payload: state.todoList })
+  const error = errorInTodosFetch || errorInUsersFetch
+
+  if (error) {
+    dispatch(setErrorMessage(error))
+  } else if (todos.length && users.length) {
+    const tableData = todos.map((todo) => {
+      const user = users.find((user) => user.id === todo.userId)
+
+      return {
+        ...todo,
+        name: user.name,
+      }
+    })
+    dispatch(setData(tableData))
   }
 }
 
@@ -68,28 +79,28 @@ const columns = [
 ]
 
 const TodoList = () => {
-  const {
-    state: { isLoading, todoList, errorMessage },
-    dispatch,
-    stateFilter: { searchKeyword, filterOption },
-    setItemIdToUpdate,
-  } = useContext(AppContext)
   const [page, setPage] = useState(0)
   const [rowsPerPage, setRowsPerPage] = useState(10)
+  const { userData, todoData, tableData, filterAndSearch } = useSelector(
+    (state) => state
+  )
+  const { loading, data, errorMessage } = tableData
+  const { searchKeyword, filterOption } = filterAndSearch
+  const dispatch = useDispatch()
 
-  let list = filterList(todoList, filterOption)
+  let list = filterList(data, filterOption)
 
   if (searchKeyword) list = searchList(list, searchKeyword)
 
   const updateItem = (id) => {
     const dialog = document.getElementById("dialogModal")
 
-    setItemIdToUpdate(id)
+    dispatch(setIdToUpdate(id))
     dialog.showModal()
   }
 
   const completeItem = (id) => {
-    dispatch({ type: "COMPLETE_ITEM", payload: id })
+    dispatch(markItemAsComplete(id))
   }
 
   const handleChangePage = (e, newPage) => {
@@ -102,8 +113,10 @@ const TodoList = () => {
   }
 
   useEffect(() => {
-    fetchDataAndCheckStorage(dispatch)
-  }, [])
+    if (!localStorage.getItem("crud-demo-data")) {
+      setTableData({ userData, todoData }, dispatch)
+    }
+  }, [userData, todoData])
 
   return (
     <Paper sx={{ width: "100%", overflow: "hidden", marginBottom: "25px" }}>
@@ -125,7 +138,7 @@ const TodoList = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {isLoading
+            {loading
               ? null
               : errorMessage
               ? null
@@ -171,10 +184,20 @@ const TodoList = () => {
               : null}
           </TableBody>
         </Table>
-        {isLoading ? (
-          <h3>Loading data..</h3>
+        {loading ? (
+          <Typography
+            variant="h6"
+            sx={{ marginTop: "20px", textAlign: "center" }}
+          >
+            Loading data..
+          </Typography>
         ) : list.length ? null : errorMessage ? (
-          <h3>{errorMessage}</h3>
+          <Typography
+            variant="h6"
+            sx={{ marginTop: "20px", textAlign: "center" }}
+          >
+            {errorMessage}
+          </Typography>
         ) : (
           <Typography
             variant="h6"

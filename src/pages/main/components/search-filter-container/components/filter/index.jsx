@@ -1,15 +1,18 @@
-import React, { useContext } from "react"
+import React from "react"
 import Select from "@mui/material/Select"
 import FormControl from "@mui/material/FormControl"
 import InputLabel from "@mui/material/InputLabel"
 import MenuItem from "@mui/material/MenuItem"
-import { AppContext } from "@/setup/app-context-manager/appContext"
+import { useDispatch, useSelector } from "react-redux"
+import { setFilterOption } from "@/setup/features/filter-and-search/filterAndSearchSlice"
 
 const Filter = () => {
-  const { stateFilter, dispatchFilter } = useContext(AppContext)
+  const { filterAndSearch } = useSelector((state) => state)
+  const { filterOption } = filterAndSearch
+  const dispatch = useDispatch()
 
   const handleOptionChange = (e) => {
-    dispatchFilter({ type: "FILTER_OPTION", payload: e.target.value })
+    dispatch(setFilterOption(e.target.value))
   }
 
   return (
@@ -45,7 +48,7 @@ const Filter = () => {
       <Select
         labelId="filter"
         label="filter"
-        value={stateFilter.filterOption}
+        value={filterOption}
         onChange={handleOptionChange}
         sx={{
           "& .MuiSelect-outlined": {

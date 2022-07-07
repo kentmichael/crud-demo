@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect } from "react"
+import React, { useState, useEffect } from "react"
 import ReactDOM from "react-dom"
 import Box from "@mui/material/Box"
 import FormControl from "@mui/material/FormControl"
@@ -6,7 +6,9 @@ import TextField from "@mui/material/TextField"
 import Typography from "@mui/material/Typography"
 import Button from "@mui/material/Button"
 import Stack from "@mui/material/Stack"
-import { AppContext } from "@/setup/app-context-manager/appContext"
+import { useSelector, useDispatch } from "react-redux"
+import { setIdToUpdate } from "@/setup/features/update/updateSlice"
+import { addItem, editItem } from "@/setup/features/table-data/tableDataSlice"
 
 const modalStyle = {
   padding: 0,
@@ -21,33 +23,27 @@ const initialState = {
 
 const DialogModal = () => {
   const [input, setInput] = useState(initialState)
-  const [confirm, setConfirm] = useState(false)
-  const dialog = document.getElementById("dialogModal")
-
+  const dispatch = useDispatch()
   const {
-    state: { todoList },
-    dispatch,
-    itemIdToUpdate,
-    setItemIdToUpdate,
-  } = useContext(AppContext)
+    tableData: { data: todoList },
+    idToUpdate: { id: itemIdToUpdate },
+  } = useSelector((state) => state)
 
   const handleSubmit = (e) => {
+    const dialog = document.getElementById("dialogModal")
+
     if (input.name && input.item) {
       const { name, item: title } = input
 
       itemIdToUpdate
-        ? dispatch({
-            type: "UPDATE_ITEM",
-            payload: { itemIdToUpdate, title },
-          })
-        : dispatch({ type: "ADD_ITEM", payload: { name, title } })
+        ? dispatch(editItem({ itemIdToUpdate, title }))
+        : dispatch(addItem({ name, title }))
 
       setInput(initialState)
-      setItemIdToUpdate("")
+      dispatch(setIdToUpdate(0))
       dialog.close()
     }
 
-    setConfirm(true)
     e.preventDefault()
   }
 
@@ -59,9 +55,10 @@ const DialogModal = () => {
   }
 
   const closeModal = () => {
+    const dialog = document.getElementById("dialogModal")
+
     setInput(initialState)
-    setItemIdToUpdate("")
-    setConfirm(false)
+    dispatch(setIdToUpdate(0))
     dialog.close()
   }
 
@@ -79,8 +76,7 @@ const DialogModal = () => {
   useEffect(() => {
     window.addEventListener("keyup", (e) => {
       if (e.key === "Escape") {
-        setInput(initialState)
-        setItemIdToUpdate("")
+        closeModal()
       }
     })
   }, [])
@@ -90,10 +86,7 @@ const DialogModal = () => {
       id="dialogModal"
       onClick={(e) => {
         if (e.target.id === "dialogModal") {
-          setInput(initialState)
-          setItemIdToUpdate("")
-          setConfirm(false)
-          dialog.close()
+          closeModal()
         }
       }}
       style={modalStyle}
@@ -101,12 +94,12 @@ const DialogModal = () => {
       <Box
         sx={{
           width: 360,
-          height: 410,
           paddingBlock: "20px",
           paddingInline: "10px",
         }}
       >
         <FormControl
+          component="form"
           onSubmit={handleSubmit}
           sx={{
             width: "100%",
@@ -117,7 +110,7 @@ const DialogModal = () => {
           }}
         >
           <Typography variant="h1" sx={{ fontSize: "28px" }}>
-            {input.name ? "EDIT" : "ADD"}
+            {itemIdToUpdate ? "EDIT" : "ADD"}
           </Typography>
 
           <TextField
